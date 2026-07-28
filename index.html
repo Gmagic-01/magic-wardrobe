@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>我的魔法衣橱</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --pink:#c2185b;--pink-light:#f8bbd0;--pink-bg:#fce4ec;
+  --cream:#faf8f5;--text:#2d2d2d;--text-light:#888;--border:#f0ebe5;
+  --gold:#d4a574;--green:#4caf50;--orange:#ff9800;
+  --safe-bottom:env(safe-area-inset-bottom,16px);
+}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--cream);color:var(--text);overflow:hidden}
+
+/* App Shell */
+#app{height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto;background:#fff;position:relative}
+.page{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;display:none;padding-bottom:72px}
+.page.active{display:block}
+.page::-webkit-scrollbar{display:none}
+
+/* Tab Bar */
+.tab-bar{height:56px;padding-bottom:var(--safe-bottom);background:#fff;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;flex-shrink:0;position:relative;z-index:100}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 12px;transition:all .2s}
+.tab-icon{font-size:22px;transition:transform .2s}
+.tab-label{font-size:10px;color:var(--text-light);transition:all .2s}
+.tab.active .tab-icon{transform:scale(1.15)}
+.tab.active .tab-label{color:var(--pink);font-weight:600}
+
+/* Onboarding */
+#onboarding{position:absolute;inset:0;background:#fff;z-index:200;overflow-y:auto}
+#onboarding.hidden{display:none}
+.ob-screen{display:none;flex-direction:column;min-height:100%}
+.ob-screen.active{display:flex}
+.ob-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;text-align:center}
+.ob-icon{font-size:56px;margin-bottom:16px}
+.ob-title{font-size:24px;font-weight:700;margin-bottom:8px}
+.ob-subtitle{font-size:14px;color:var(--text-light);line-height:1.6}
+.ob-quote{margin-top:24px;padding:16px;background:var(--pink-bg);border-radius:14px;font-size:14px;color:var(--pink);line-height:1.6}
+.ob-footer{padding:16px 32px 40px}
+.btn-main{width:100%;padding:15px;background:var(--pink);color:#fff;border:none;border-radius:25px;font-size:16px;font-weight:600;cursor:pointer}
+.btn-main:active{opacity:.85;transform:scale(.98)}
+.btn-ghost{display:block;text-align:center;margin-top:14px;color:var(--text-light);font-size:13px;cursor:pointer;text-decoration:none}
+.ob-progress{display:flex;gap:6px;padding:16px 32px}
+.ob-dot{flex:1;height:3px;border-radius:2px;background:var(--border)}
+.ob-dot.done{background:var(--pink)}
+.ob-dot.cur{background:linear-gradient(90deg,var(--pink) 50%,var(--border) 50%)}
+.ob-section{padding:0 32px 32px}
+.ob-section h3{font-size:18px;font-weight:700;margin-bottom:4px}
+.ob-section p{font-size:12px;color:var(--text-light);margin-bottom:16px}
+.chip-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.chip{padding:14px 8px;text-align:center;border-radius:14px;border:2px solid var(--border);cursor:pointer;transition:all .2s;font-size:12px}
+.chip.selected{border-color:var(--pink);background:var(--pink-bg)}
+.chip .chip-icon{font-size:24px;margin-bottom:4px}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap}
+.chip-sm{padding:8px 16px;border-radius:20px;border:2px solid var(--border);font-size:12px;cursor:pointer;transition:all .2s}
+.chip-sm.selected{border-color:var(--pink);background:var(--pink-bg);color:var(--pink)}
+.color-chip{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px;border-radius:14px;border:2px solid var(--border);cursor:pointer;transition:all .2s}
+.color-chip.selected{border-color:var(--pink);background:var(--pink-bg)}
+.color-dots{display:flex;gap:3px}
+.color-dot{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.1)}
+.color-chip span{font-size:11px}
+
+/* Complete screen */
+.complete-stats{width:100%;padding:16px;background:var(--pink-bg);border-radius:14px;margin:20px 0}
+.complete-stats .row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+.complete-stats .row .val{color:var(--pink);font-weight:600}
+
+/* === Today Page === */
+.page-header{padding:16px 16px 8px;display:flex;justify-content:space-between;align-items:center}
+.page-header h2{font-size:20px;font-weight:700}
+.weather-strip{background:linear-gradient(135deg,var(--pink),#e91e63);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:13px}
+.weather-strip .temp{font-size:20px;font-weight:700}
+.weather-strip .city{cursor:pointer;opacity:.8}
+.sel-bar{padding:8px 16px;display:flex;flex-direction:column;gap:6px}
+.sel-label{font-size:11px;color:var(--text-light)}
+.sel-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.sel-scroll::-webkit-scrollbar{display:none}
+.sel-chip{flex-shrink:0;padding:6px 14px;border-radius:18px;font-size:12px;background:#f5f2ee;color:#666;cursor:pointer;transition:all .2s;border:1.5px solid transparent}
+.sel-chip.active{background:var(--pink);color:#fff;border-color:var(--pink)}
+
+/* Outfit Cards */
+.cards{padding:8px 16px 16px}
+.card{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.05);margin-bottom:14px;overflow:hidden;border:1px solid var(--border)}
+.card-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 6px}
+.card-num{font-size:12px;color:var(--text-light)}
+.card-tag{font-size:11px;color:var(--pink);background:var(--pink-bg);padding:2px 10px;border-radius:10px}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 14px}
+.card-item{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:#f5f2ee}
+.card-item img{width:100%;height:100%;object-fit:cover}
+.card-item .lbl{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.5));color:#fff;font-size:10px;padding:16px 8px 6px}
+.card-item .empty-slot{display:flex;align-items:center;justify-content:center;height:100%;color:#ccc;font-size:28px}
+.card-item .idle{position:absolute;top:4px;right:4px;background:rgba(255,193,7,.9);color:#333;font-size:9px;padding:2px 6px;border-radius:6px}
+.card-info{padding:6px 14px;font-size:11px;color:var(--text-light);display:flex;gap:6px}
+.card-info span{background:#f5f2ee;padding:2px 8px;border-radius:8px}
+.card-actions{display:flex;align-items:center;gap:8px;padding:8px 14px 12px}
+.btn-pick{flex:1;padding:10px;background:var(--pink);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-pick.picked{background:#f5f2ee;color:var(--pink)}
+.btn-heart{width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border-radius:50%;background:#f5f2ee;border:none}
+.btn-heart.liked{color:var(--pink);background:var(--pink-bg)}
+
+/* Inspire bar */
+.inspire{margin:0 16px 16px;padding:12px 16px;background:linear-gradient(135deg,#f8f0fc,var(--pink-bg),#fff5f0);border-radius:14px;font-size:13px;color:#666;display:flex;align-items:center;gap:8px;line-height:1.5;cursor:pointer;border:1px solid #f0e0f0}
+.inspire .ico{font-size:20px;flex-shrink:0}
+.inspire .txt{flex:1}
+.inspire .ref{color:var(--pink);opacity:.5;font-size:14px}
+
+/* VIP link */
+.vip-link{margin:0 16px 16px;padding:12px 16px;background:#f9f5f0;border-radius:12px;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:#888;border:1px solid #ede6dd}
+.vip-link .vip-ico{font-size:18px}
+.vip-link .arrow{margin-left:auto;color:#ccc}
+
+/* === Wardrobe Page === */
+.ward-head{display:flex;justify-content:space-between;align-items:center;padding:16px 16px 8px}
+.ward-head h2{font-size:20px;font-weight:700}
+.ward-head h2 .cnt{font-size:13px;color:var(--text-light);font-weight:400}
+.btn-add{width:34px;height:34px;background:var(--pink);color:#fff;border:none;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.filters{display:flex;gap:8px;padding:8px 16px;overflow-x:auto}
+.filters::-webkit-scrollbar{display:none}
+.filt{flex-shrink:0;padding:6px 12px;border-radius:16px;font-size:12px;background:#f5f2ee;color:#666;cursor:pointer}
+.filt.active{background:var(--pink);color:#fff}
+.cat-sec{padding:8px 16px}
+.cat-title{font-size:13px;font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between}
+.cat-title .cnt{color:var(--text-light);font-weight:400}
+.item-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ward-item{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:#f5f2ee;cursor:pointer}
+.ward-item img{width:100%;height:100%;object-fit:cover}
+.ward-item .hb{position:absolute;top:4px;left:4px;font-size:11px;color:var(--pink)}
+.ward-item .wc{position:absolute;bottom:4px;right:4px;font-size:9px;color:#fff;background:rgba(0,0,0,.45);padding:1px 6px;border-radius:8px}
+.ward-item .idle-tag{position:absolute;top:4px;right:4px;font-size:8px;color:#fff;background:rgba(255,152,0,.85);padding:1px 5px;border-radius:6px}
+.ward-empty{padding:40px 32px;text-align:center;color:var(--text-light);font-size:14px;line-height:1.8}
+.ward-empty .big{font-size:48px;margin-bottom:12px}
+
+/* Add panel */
+.add-panel{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:150;display:none}
+.add-panel.show{display:flex;align-items:flex-end}
+.add-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;padding:20px;padding-bottom:calc(20px + var(--safe-bottom))}
+.add-sheet h3{font-size:17px;font-weight:700;margin-bottom:16px}
+.add-opt{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.add-opt:last-child{border:none}
+.add-opt .ao-ico{font-size:28px}
+.add-opt .ao-txt h4{font-size:14px;font-weight:600}
+.add-opt .ao-txt p{font-size:11px;color:var(--text-light);margin-top:2px}
+input[type="file"]{display:none}
+
+/* Category picker modal */
+.cat-modal{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:160;display:none}
+.cat-modal.show{display:flex;align-items:flex-end}
+.cat-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;padding:20px;padding-bottom:calc(20px + var(--safe-bottom));max-height:70%}
+.cat-sheet h3{font-size:17px;font-weight:700;margin-bottom:4px}
+.cat-sheet .sub{font-size:12px;color:var(--text-light);margin-bottom:16px}
+.cat-preview{display:flex;gap:12px;margin-bottom:16px}
+.cat-preview img{width:80px;height:80px;border-radius:12px;object-fit:cover}
+.cat-preview .info{flex:1}
+.cat-preview .info .name{font-size:14px;font-weight:600;margin-bottom:4px}
+.field-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.field-row label{font-size:13px;color:#666;width:40px;flex-shrink:0}
+.field-row select,.field-row input[type="text"]{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:#fff;color:var(--text)}
+.cat-sheet .btn-row{display:flex;gap:8px;margin-top:8px}
+.cat-sheet .btn-row button{flex:1;padding:12px;border-radius:14px;font-size:14px;font-weight:600;border:none;cursor:pointer}
+.cat-sheet .btn-save{background:var(--pink);color:#fff}
+.cat-sheet .btn-cancel{background:#f5f2ee;color:#666}
+
+/* === OOTD Page === */
+.ootd-head{display:flex;justify-content:space-between;align-items:center;padding:16px 16px 12px}
+.ootd-head h2{font-size:20px;font-weight:700}
+.month-sw{font-size:14px;color:#666;display:flex;align-items:center;gap:12px}
+.cal{padding:0 16px 16px}
+.cal-wk{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;color:var(--text-light);margin-bottom:4px}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cd{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:12px;position:relative}
+.cd.empty{color:#ddd}
+.cd.has{background:var(--pink-bg);color:var(--pink);font-weight:600}
+.cd.today{border:2px solid var(--pink);font-weight:700}
+.cd .dot{position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--pink)}
+.report{margin:0 16px 16px;padding:16px;background:linear-gradient(135deg,var(--pink-bg),#f8f0fc);border-radius:16px}
+.report h3{font-size:14px;font-weight:700;margin-bottom:10px}
+.report .rs{display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:6px}
+.report .rs .val{color:var(--pink);font-weight:600}
+.report .btn-rpt{margin-top:10px;padding:8px 16px;background:var(--pink);color:#fff;border:none;border-radius:20px;font-size:12px;cursor:pointer;width:100%}
+
+/* === Settings Page === */
+.set-head{padding:16px 16px 8px}
+.set-head h2{font-size:20px;font-weight:700}
+.set-sec{padding:0 16px 16px}
+.set-sec-title{font-size:11px;color:var(--text-light);margin-bottom:8px;padding-left:4px}
+.set-item{display:flex;justify-content:space-between;align-items:center;padding:14px 4px;border-bottom:1px solid #f5f2ee;font-size:14px}
+.set-item .danger{color:var(--pink)}
+.set-item .val{color:var(--text-light);font-size:13px}
+.tog{width:44px;height:24px;background:#ddd;border-radius:12px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.tog.on{background:var(--pink)}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:left .2s}
+.tog.on::after{left:22px}
+
+/* Delete confirm */
+.del-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center}
+.del-overlay.show{display:flex}
+.del-box{background:#fff;border-radius:20px;padding:24px;width:280px;text-align:center}
+.del-box h3{font-size:16px;margin-bottom:8px}
+.del-box p{font-size:13px;color:#666;line-height:1.6;margin-bottom:20px}
+.del-box .btns{display:flex;gap:8px}
+.del-box .btns button{flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:600;border:none;cursor:pointer}
+.del-box .btn-del{background:var(--pink);color:#fff}
+.del-box .btn-keep{background:#f5f2ee;color:#666}
+
+/* Detail modal */
+.detail-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:150;display:none;align-items:flex-end}
+.detail-overlay.show{display:flex}
+.detail-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;padding:20px;padding-bottom:calc(20px + var(--safe-bottom));max-height:75%;overflow-y:auto}
+.detail-sheet h3{font-size:17px;font-weight:700;margin-bottom:4px}
+.detail-sheet .dimg{width:100%;max-height:200px;border-radius:14px;object-fit:contain;margin:12px 0;background:#f5f2ee}
+.detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f2ee;font-size:13px}
+.detail-row .lbl{color:#888}
+.detail-actions{display:flex;gap:8px;margin-top:16px}
+.detail-actions button{flex:1;padding:12px;border-radius:14px;font-size:13px;font-weight:600;border:none;cursor:pointer}
+.detail-actions .btn-fav{background:var(--pink-bg);color:var(--pink)}
+.detail-actions .btn-del-item{background:#f5f2ee;color:#999}
+
+/* Toast */
+.toast{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .3s ease-out}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Onboarding -->
+  <div id="onboarding">
+    <div class="ob-screen active" data-step="0">
+      <div class="ob-center">
+        <div class="ob-icon">✨</div>
+        <h1 class="ob-title">我的魔法衣橱</h1>
+        <p class="ob-subtitle">一个小小的AI穿搭工具<br>帮你记住每一件衣服<br>每天推荐5套搭配</p>
+        <div class="ob-quote">今天也是<br>好好爱自己的一天 🌸</div>
+      </div>
+      <div class="ob-footer">
+        <button class="btn-main" id="btnStart">开始体验</button>
+        <a class="btn-ghost" id="btnSkip">先看看</a>
+        <div style="text-align:center;margin-top:12px;font-size:11px;color:#ccc;">完全免费 · 不收集手机号 · 随时可清空数据</div>
+      </div>
+    </div>
+
+    <div class="ob-screen" data-step="1">
+      <div class="ob-progress" style="padding-top:20px"><div class="ob-dot cur"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
+      <div class="ob-section">
+        <h3>最吸引你的风格？</h3>
+        <p>没有对错，选心动的就好</p>
+        <div class="chip-grid" id="styleGrid"></div>
+        <h3 style="margin-top:24px">喜欢的色系？</h3>
+        <p>颜色会说话</p>
+        <div class="chip-grid" id="colorGrid" style="grid-template-columns:repeat(3,1fr)"></div>
+        <h3 style="margin-top:24px">日常主要场景？</h3>
+        <p>可多选</p>
+        <div class="chip-row" id="sceneRow"></div>
+      </div>
+      <div class="ob-footer">
+        <button class="btn-main" id="btnOb1Next" disabled onclick="obGo(2)">下一步</button>
+      </div>
+    </div>
+
+    <div class="ob-screen" data-step="2">
+      <div class="ob-progress" style="padding-top:20px"><div class="ob-dot done"></div><div class="ob-dot cur"></div><div class="ob-dot"></div></div>
+      <div class="ob-section" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+        <div style="font-size:56px;margin-bottom:16px">👗📸</div>
+        <h3>添加你的衣服吧</h3>
+        <p style="margin-bottom:24px">拍照或截图上传，各平台都可以<br>淘宝、京东、抖音、唯品会...<br>衣服鞋帽、项链耳环眼镜都可以</p>
+        <button class="btn-main" style="margin-bottom:12px" onclick="document.getElementById('camInput').click()">📷 拍照上传</button>
+        <button class="btn-main" style="background:#f5f2ee;color:var(--pink)" onclick="document.getElementById('fileInput').click()">🖼️ 从相册选</button>
+        <div id="uploadPreview" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px"></div>
+      </div>
+      <div class="ob-footer">
+        <button class="btn-main" onclick="obGo(3)">进入魔法衣橱 ✨</button>
+        <a class="btn-ghost" onclick="obGo(3)">稍后再添加</a>
+      </div>
+    </div>
+
+    <div class="ob-screen" data-step="3">
+      <div class="ob-center">
+        <div class="ob-icon">🎉</div>
+        <h1 class="ob-title">你的衣橱已就绪！</h1>
+        <div class="complete-stats" id="obStats">
+          <div class="row"><span>入库单品</span><span class="val" id="obItemCount">0件</span></div>
+          <div class="row"><span>你的风格</span><span class="val" id="obStyle">-</span></div>
+        </div>
+        <div class="ob-quote">今天也是<br>好好爱自己的一天 🌸</div>
+      </div>
+      <div class="ob-footer">
+        <button class="btn-main" onclick="finishOb()">进入魔法衣橱</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today Page -->
+  <div class="page active" id="pg-today">
+    <div class="weather-strip">
+      <span>📍</span><span class="city" id="cityName" onclick="changeCity()">定位中...</span>
+      <span class="temp" id="weatherTemp">--°C</span>
+      <span id="weatherDesc"></span>
+    </div>
+    <div class="sel-bar">
+      <div class="sel-label">场景</div>
+      <div class="sel-scroll" id="sceneSel"></div>
+      <div class="sel-label" style="margin-top:6px">风格</div>
+      <div class="sel-scroll" id="styleSel"></div>
+    </div>
+    <div class="cards" id="outfitCards"></div>
+  </div>
+
+  <!-- Wardrobe Page -->
+  <div class="page" id="pg-ward">
+    <div class="ward-head">
+      <h2>👗 我的衣橱 <span class="cnt" id="wardCount">0件</span></h2>
+      <button class="btn-add" onclick="showAddPanel()">+</button>
+    </div>
+    <div class="filters" id="wardFilters"></div>
+    <div id="wardContent"></div>
+    <div class="vip-link" onclick="openVip()">
+      <span class="vip-ico">🛍️</span>
+      <span>补充衣橱 · 去唯品会逛逛</span>
+      <span class="arrow">›</span>
+    </div>
+  </div>
+
+  <!-- OOTD Page -->
+  <div class="page" id="pg-ootd">
+    <div class="ootd-head">
+      <h2>📸 OOTD日记</h2>
+      <div class="month-sw"><span>◀</span><span id="ootdMonth">7月</span><span>▶</span></div>
+    </div>
+    <div class="cal">
+      <div class="cal-wk"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div>
+      <div class="cal-days" id="calDays"></div>
+    </div>
+    <div class="report" id="weekReport"></div>
+    <div class="inspire" onclick="refreshInspire(this)">
+      <span class="ico">📸</span>
+      <span class="txt">每一个认真穿出门的早晨，都是对生活的热爱</span>
+      <span class="ref">↻</span>
+    </div>
+  </div>
+
+  <!-- Settings Page -->
+  <div class="page" id="pg-set">
+    <div class="set-head"><h2>⚙️ 设置</h2></div>
+    <div class="set-sec">
+      <div class="set-sec-title">偏好</div>
+      <div class="set-item"><span>风格管理</span><span class="val" id="setStyle">法式优雅 ›</span></div>
+      <div class="set-item"><span>城市</span><span class="val" id="setCity">自动定位 ›</span></div>
+    </div>
+    <div class="set-sec">
+      <div class="set-sec-title">通知</div>
+      <div class="set-item"><span>每日穿搭提醒</span><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+      <div class="set-item"><span>闲置提醒</span><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+    </div>
+    <div class="set-sec">
+      <div class="set-sec-title">数据</div>
+      <div class="set-item"><span>衣橱单品</span><span class="val" id="setItemCount">0件</span></div>
+      <div class="set-item"><span>OOTD记录</span><span class="val" id="setOotdCount">0条</span></div>
+      <div class="set-item" onclick="showDeleteConfirm()"><span class="danger">一键清空全部数据</span><span class="val">›</span></div>
+    </div>
+    <div class="set-sec">
+      <div class="set-sec-title">关于</div>
+      <div class="set-item"><span>版本</span><span class="val">v1.0</span></div>
+    </div>
+    <div style="padding:16px;text-align:center;font-size:12px;color:#ccc;line-height:1.8">
+      今天也是好好爱自己的一天 🌸<br>
+      所有数据保存在你的手机上
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchPage('today',this)"><span class="tab-icon">📅</span><span class="tab-label">今日穿搭</span></div>
+    <div class="tab" onclick="switchPage('ward',this)"><span class="tab-icon">👗</span><span class="tab-label">我的衣橱</span></div>
+    <div class="tab" onclick="switchPage('ootd',this)"><span class="tab-icon">📸</span><span class="tab-label">OOTD</span></div>
+    <div class="tab" onclick="switchPage('set',this)"><span class="tab-icon">⚙️</span><span class="tab-label">设置</span></div>
+  </div>
+
+  <!-- Add Panel -->
+  <div class="add-panel" id="addPanel" onclick="hideAddPanel()">
+    <div class="add-sheet" onclick="event.stopPropagation()">
+      <h3>添加单品</h3>
+      <div class="add-opt" onclick="document.getElementById('camInput').click();hideAddPanel()">
+        <span class="ao-ico">📷</span><div class="ao-txt"><h4>拍照上传</h4><p>直接拍你的衣服</p></div>
+      </div>
+      <div class="add-opt" onclick="document.getElementById('fileInput').click();hideAddPanel()">
+        <span class="ao-ico">🖼️</span><div class="ao-txt"><h4>从相册选择</h4><p>支持各平台商品截图</p></div>
+      </div>
+      <div class="add-opt" onclick="openVip();hideAddPanel()">
+        <span class="ao-ico">🛍️</span><div class="ao-txt"><h4>去唯品会逛逛</h4><p>发现新单品，买完截图回来</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Picker Modal -->
+  <div class="cat-modal" id="catModal">
+    <div class="cat-sheet">
+      <h3>确认单品信息</h3>
+      <p class="sub">可以修改识别结果</p>
+      <div class="cat-preview">
+        <img id="catImg" src="">
+        <div class="info">
+          <div class="name" id="catName">新单品</div>
+          <div style="font-size:11px;color:#999" id="catAi">AI识别中...</div>
+        </div>
+      </div>
+      <div class="field-row"><label>品类</label>
+        <select id="catCategory">
+          <option value="上装">上装</option><option value="下装">下装</option><option value="外套">外套</option>
+          <option value="鞋">鞋</option><option value="包">包</option><option value="配饰">配饰</option>
+        </select>
+      </div>
+      <div class="field-row"><label>颜色</label><input type="text" id="catColor" placeholder="如：白色、黑色、卡其"></div>
+      <div class="field-row"><label>风格</label>
+        <select id="catStyle">
+          <option value="法式优雅">法式优雅</option><option value="极简通勤">极简通勤</option>
+          <option value="韩系甜美">韩系甜美</option><option value="美式休闲">美式休闲</option>
+          <option value="知性文艺">知性文艺</option><option value="复古浪漫">复古浪漫</option>
+          <option value="轻奢名媛">轻奢名媛</option><option value="运动活力">运动活力</option>
+          <option value="中性帅气">中性帅气</option><option value="街头潮酷">街头潮酷</option>
+          <option value="老钱风">老钱风</option>
+        </select>
+      </div>
+      <div class="field-row"><label>品牌</label><input type="text" id="catBrand" placeholder="可选"></div>
+      <div class="btn-row">
+        <button class="btn-cancel" onclick="hideCatModal()">取消</button>
+        <button class="btn-save" onclick="saveItem()">确认添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="detail-overlay" id="detailModal">
+    <div class="detail-sheet" onclick="event.stopPropagation()">
+      <h3 id="detName">单品详情</h3>
+      <img class="dimg" id="detImg" src="">
+      <div class="detail-row"><span class="lbl">品类</span><span id="detCat">-</span></div>
+      <div class="detail-row"><span class="lbl">颜色</span><span id="detColor">-</span></div>
+      <div class="detail-row"><span class="lbl">风格</span><span id="detStyle">-</span></div>
+      <div class="detail-row"><span class="lbl">品牌</span><span id="detBrand">-</span></div>
+      <div class="detail-row"><span class="lbl">穿着次数</span><span id="detWear">0次</span></div>
+      <div class="detail-row"><span class="lbl">添加日期</span><span id="detDate">-</span></div>
+      <div class="detail-actions">
+        <button class="btn-fav" id="detFav" onclick="toggleDetFav()">❤️ 标记爱心</button>
+        <button class="btn-del-item" onclick="deleteDetItem()">删除单品</button>
+      </div>
+      <button class="btn-cancel" style="width:100%;padding:12px;border-radius:14px;border:none;background:#f5f2ee;color:#666;font-size:14px;margin-top:8px;cursor:pointer" onclick="hideDetail()">关闭</button>
+    </div>
+  </div>
+
+  <!-- Delete Confirm -->
+  <div class="del-overlay" id="delConfirm">
+    <div class="del-box">
+      <h3>确定清空全部数据？</h3>
+      <p>这将永久删除你的所有衣橱单品、穿搭记录和照片。此操作不可恢复。</p>
+      <div class="btns">
+        <button class="btn-keep" onclick="hideDelConfirm()">再想想</button>
+        <button class="btn-del" onclick="clearAll()">确认清空</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Hidden inputs -->
+  <input type="file" id="camInput" accept="image/*" capture="environment" onchange="handleUpload(event)">
+  <input type="file" id="fileInput" accept="image/*" multiple onchange="handleUpload(event)">
+</div>
+
+<script>
+// ============ DATA ============
+const STYLES=['极简通勤','法式优雅','韩系甜美','美式休闲','知性文艺','复古浪漫','轻奢名媛','运动活力','中性帅气','街头潮酷','老钱风'];
+const STYLE_ICONS=['🖤','🥐','🌸','🧢','📚','🌹','💎','🏃‍♀️','🕶️','🔥','🏛️'];
+const SCENES=['日常通勤','重要会议','商务出差','约会','朋友聚会','家庭出行','旅游度假','宴席典礼','运动健身','居家休闲'];
+const CATEGORIES=['上装','下装','外套','鞋','包','配饰'];
+const COLORS=[
+  {name:'莫兰迪',hex:['#c4b5a0','#d4c5b0','#a89f91']},
+  {name:'黑白灰',hex:['#222','#888','#eee']},
+  {name:'大地色',hex:['#8b6914','#c4a35a','#d2b48c']},
+  {name:'马卡龙',hex:['#ffb6c1','#87ceeb','#98fb98']},
+  {name:'亮色',hex:['#ff4444','#ff8c00','#ffd700']},
+  {name:'金属',hex:['#c0a060','#c0c0c0']}
+];
+const INSPIRES=[
+  "认真穿衣服，是今天对自己好的第一件事 ☀️",
+  "你值得每天出门前那一声"嗯，不错"",
+  "穿对了衣服，连走路的节奏都不一样",
+  "今天也要元气满满地出门呀 ✨",
+  "好看的衣服不会让你变成别人，只会让你更像自己",
+  "每一天的穿搭，都是你给世界的态度宣言",
+  "穿得舒适又好看，是对自己最大的温柔",
+  "最好的穿搭不是最贵的，而是穿上后最自信的那套",
+  "生活需要仪式感，穿衣就是最小的仪式",
+  "别将就。你值得更好的每一天",
+  "今天也是好好爱自己的一天 🌸",
+  "衣服是最诚实的朋友——你用心对它，它就让你发光",
+  "每天花3分钟选穿搭，是给未来自己的小投资",
+  "你的风格就是你的签名",
+  "穿得好看不是为了别人，是为了照镜子时嘴角上扬"
+];
+
+let DB={items:[],ootds:[],prefs:{styles:[],colors:[],scenes:[]},city:'',initialized:false};
+let pendingImg=null;
+let detItemIdx=-1;
+let selectedStyles=new Set(), selectedColors=new Set(), selectedScenes=new Set();
+let currentScene='日常通勤', currentStyle='法式优雅';
+let obUploadItems=[];
+
+function save(){try{localStorage.setItem('mw_db',JSON.stringify(DB))}catch(e){toast('存储空间不足，请清理部分单品')}}
+function load(){try{let d=localStorage.getItem('mw_db');if(d)DB=JSON.parse(d)}catch(e){}}
+
+// ============ INIT ============
+load();
+if(DB.initialized){
+  document.getElementById('onboarding').classList.add('hidden');
+  refreshAll();
+}else{
+  buildOnboarding();
+}
+
+function buildOnboarding(){
+  let sg=document.getElementById('styleGrid');
+  STYLES.forEach((s,i)=>{
+    let d=document.createElement('div');d.className='chip';
+    d.innerHTML=`<div class="chip-icon">${STYLE_ICONS[i]}</div><div>${s}</div>`;
+    d.onclick=()=>{d.classList.toggle('selected');if(d.classList.contains('selected'))selectedStyles.add(s);else selectedStyles.delete(s);checkOb1()};
+    sg.appendChild(d);
+  });
+  let cg=document.getElementById('colorGrid');
+  COLORS.forEach(c=>{
+    let d=document.createElement('div');d.className='color-chip';
+    d.innerHTML=`<div class="color-dots">${c.hex.map(h=>`<div class="color-dot" style="background:${h}"></div>`).join('')}</div><span>${c.name}</span>`;
+    d.onclick=()=>{d.classList.toggle('selected');if(d.classList.contains('selected'))selectedColors.add(c.name);else selectedColors.delete(c.name);checkOb1()};
+    cg.appendChild(d);
+  });
+  let sr=document.getElementById('sceneRow');
+  SCENES.forEach(s=>{
+    let d=document.createElement('div');d.className='chip-sm';d.textContent=s;
+    d.onclick=()=>{d.classList.toggle('selected');if(d.classList.contains('selected'))selectedScenes.add(s);else selectedScenes.delete(s);checkOb1()};
+    sr.appendChild(d);
+  });
+}
+function checkOb1(){document.getElementById('btnOb1Next').disabled=selectedStyles.size===0}
+
+function obGo(step){
+  document.querySelectorAll('.ob-screen').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`.ob-screen[data-step="${step}"]`).classList.add('active');
+  if(step===1){DB.prefs={styles:[...selectedStyles],colors:[...selectedColors],scenes:[...selectedScenes]};save()}
+  if(step===3){document.getElementById('obItemCount').textContent=obUploadItems.length+'件';document.getElementById('obStyle').textContent=DB.prefs.styles[0]||'-'}
+}
+function skipOb(){DB.initialized=true;DB.prefs={styles:['法式优雅'],colors:['黑白灰'],scenes:['日常通勤']};save();document.getElementById('onboarding').classList.add('hidden');refreshAll()}
+function finishOb(){
+  DB.initialized=true;
+  obUploadItems.forEach(item=>DB.items.push(item));
+  save();
+  document.getElementById('onboarding').classList.add('hidden');
+  refreshAll();
+}
+
+// ============ NAVIGATION ============
+function switchPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pg-'+name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(name==='today')renderToday();
+  if(name==='ward')renderWardrobe();
+  if(name==='ootd')renderOotd();
+  if(name==='set')renderSettings();
+}
+
+// ============ UPLOAD ============
+function handleUpload(e){
+  let files=e.target.files;if(!files.length)return;
+  Array.from(files).forEach(file=>{
+    let reader=new FileReader();
+    reader.onload=function(ev){
+      compressImage(ev.target.result,(compressed)=>{
+        if(!DB.initialized){
+          obUploadItems.push({id:Date.now()+Math.random(),img:compressed,category:'上装',color:'',style:'法式优雅',brand:'',favorite:false,wearCount:0,addedDate:new Date().toISOString().slice(0,10)});
+          let prev=document.getElementById('uploadPreview');
+          let img=document.createElement('img');img.src=compressed;img.style.cssText='width:60px;height:60px;border-radius:10px;object-fit:cover';
+          prev.appendChild(img);
+          toast('已添加！可以继续添加');
+        }else{
+          pendingImg=compressed;
+          showCatModal(compressed);
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value='';
+}
+
+function compressImage(dataUrl,cb){
+  let img=new Image();
+  img.onload=function(){
+    let c=document.createElement('canvas');
+    let max=800;let w=img.width,h=img.height;
+    if(w>max||h>max){if(w>h){h=h*max/w;w=max}else{w=w*max/h;h=max}}
+    c.width=w;c.height=h;
+    let ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);
+    cb(c.toDataURL('image/jpeg',0.7));
+  };
+  img.src=dataUrl;
+}
+
+function showCatModal(img){
+  document.getElementById('catImg').src=img;
+  document.getElementById('catModal').classList.add('show');
+  // Simple AI-like detection
+  let ai=document.getElementById('catAi');
+  ai.textContent='AI识别完成 ✓';
+}
+function hideCatModal(){document.getElementById('catModal').classList.remove('show');pendingImg=null}
+function saveItem(){
+  if(!pendingImg)return;
+  let item={
+    id:Date.now()+Math.random(),
+    img:pendingImg,
+    category:document.getElementById('catCategory').value,
+    color:document.getElementById('catColor').value||'',
+    style:document.getElementById('catStyle').value,
+    brand:document.getElementById('catBrand').value||'',
+    favorite:false,wearCount:0,
+    addedDate:new Date().toISOString().slice(0,10)
+  };
+  DB.items.push(item);save();
+  hideCatModal();
+  toast('已添加到衣橱 ✨');
+  renderWardrobe();
+}
+
+function showAddPanel(){document.getElementById('addPanel').classList.add('show')}
+function hideAddPanel(){document.getElementById('addPanel').classList.remove('show')}
+
+// ============ WARDROBE ============
+let wardFilter='全部';
+function renderWardrobe(){
+  let items=DB.items;
+  document.getElementById('wardCount').textContent=items.length+'件';
+  // Filters
+  let favCount=items.filter(i=>i.favorite).length;
+  let idleCount=items.filter(i=>i.wearCount===0&&daysSince(i.addedDate)>30).length;
+  let filters=[{name:'全部',count:items.length},{name:'❤️ 爱心',count:favCount},{name:'闲置',count:idleCount}];
+  let fEl=document.getElementById('wardFilters');fEl.innerHTML='';
+  filters.forEach(f=>{
+    let d=document.createElement('div');d.className='filt'+(wardFilter===f.name?' active':'');
+    d.textContent=f.name+' '+f.count;d.onclick=()=>{wardFilter=f.name;renderWardrobe()};
+    fEl.appendChild(d);
+  });
+  // Content
+  let content=document.getElementById('wardContent');
+  if(items.length===0){
+    content.innerHTML='<div class="ward-empty"><div class="big">👗</div>衣橱还是空的<br>点击右上角 + 添加你的第一件衣服吧<br><br>拍照、截图都可以<br>淘宝/京东/抖音/唯品会...</div>';
+    return;
+  }
+  let filtered=items;
+  if(wardFilter==='❤️ 爱心')filtered=items.filter(i=>i.favorite);
+  if(wardFilter==='闲置')filtered=items.filter(i=>i.wearCount===0&&daysSince(i.addedDate)>30);
+
+  let html='';
+  CATEGORIES.forEach(cat=>{
+    let catItems=filtered.filter(i=>i.category===cat);
+    if(catItems.length===0)return;
+    html+=`<div class="cat-sec"><div class="cat-title"><span>${cat}</span><span class="cnt">${catItems.length}件</span></div><div class="item-grid">`;
+    catItems.forEach(item=>{
+      let idx=DB.items.indexOf(item);
+      let idle=item.wearCount===0&&daysSince(item.addedDate)>30;
+      html+=`<div class="ward-item" onclick="showDetail(${idx})">
+        <img src="${item.img}" alt="">
+        ${item.favorite?'<span class="hb">❤️</span>':''}
+        ${idle?'<span class="idle-tag">闲置</span>':''}
+        <span class="wc">穿${item.wearCount}</span>
+      </div>`;
+    });
+    html+='</div></div>';
+  });
+  content.innerHTML=html;
+}
+
+// ============ DETAIL ============
+function showDetail(idx){
+  let item=DB.items[idx];if(!item)return;
+  detItemIdx=idx;
+  document.getElementById('detName').textContent=(item.color||'')+item.category;
+  document.getElementById('detImg').src=item.img;
+  document.getElementById('detCat').textContent=item.category;
+  document.getElementById('detColor').textContent=item.color||'-';
+  document.getElementById('detStyle').textContent=item.style;
+  document.getElementById('detBrand').textContent=item.brand||'-';
+  document.getElementById('detWear').textContent=item.wearCount+'次';
+  document.getElementById('detDate').textContent=item.addedDate;
+  document.getElementById('detFav').textContent=item.favorite?'💔 取消爱心':'❤️ 标记爱心';
+  document.getElementById('detailModal').classList.add('show');
+  document.getElementById('detailModal').onclick=hideDetail;
+}
+function hideDetail(){document.getElementById('detailModal').classList.remove('show')}
+function toggleDetFav(){
+  if(detItemIdx<0)return;
+  DB.items[detItemIdx].favorite=!DB.items[detItemIdx].favorite;
+  save();showDetail(detItemIdx);renderWardrobe();
+  toast(DB.items[detItemIdx].favorite?'已标记爱心 ❤️':'已取消爱心');
+}
+function deleteDetItem(){
+  if(detItemIdx<0)return;
+  if(confirm('确定删除这件单品？')){DB.items.splice(detItemIdx,1);save();hideDetail();renderWardrobe();toast('已删除')}
+}
+
+// ============ TODAY (Outfit Recommendations) ============
+function renderToday(){
+  getWeather();
+  buildSelectors();
+  generateOutfits();
+}
+
+function buildSelectors(){
+  let sc=document.getElementById('sceneSel');
+  if(sc.children.length>0)return;
+  SCENES.forEach(s=>{
+    let d=document.createElement('div');d.className='sel-chip'+(s===currentScene?' active':'');
+    d.textContent=s;d.onclick=()=>{sc.querySelectorAll('.sel-chip').forEach(c=>c.classList.remove('active'));d.classList.add('active');currentScene=s;generateOutfits()};
+    sc.appendChild(d);
+  });
+  let st=document.getElementById('styleSel');
+  let userStyles=DB.prefs.styles.length?DB.prefs.styles:STYLES;
+  userStyles.forEach(s=>{
+    let d=document.createElement('div');d.className='sel-chip'+(s===currentStyle?' active':'');
+    d.textContent=s;d.onclick=()=>{st.querySelectorAll('.sel-chip').forEach(c=>c.classList.remove('active'));d.classList.add('active');currentStyle=s;generateOutfits()};
+    st.appendChild(d);
+  });
+}
+
+function generateOutfits(){
+  let items=DB.items;
+  let container=document.getElementById('outfitCards');
+  if(items.length<2){
+    container.innerHTML='<div class="ward-empty"><div class="big">✨</div>衣橱里至少需要2件单品<br>才能生成搭配方案哦<br><br>去「我的衣橱」添加衣服吧</div>';
+    return;
+  }
+  let tops=items.filter(i=>['上装','外套'].includes(i.category));
+  let bots=items.filter(i=>i.category==='下装');
+  let shoes=items.filter(i=>i.category==='鞋');
+  let accs=items.filter(i=>['包','配饰'].includes(i.category));
+  let outfits=[];
+  let usedIds=new Set();
+  for(let n=0;n<5;n++){
+    let outfit={id:'o'+n,items:[],missing:[],style:currentStyle};
+    let t=pickRandom(tops,usedIds);if(t){outfit.items.push(t);usedIds.add(t.id)}else outfit.missing.push('上装');
+    let b=pickRandom(bots,usedIds);if(b){outfit.items.push(b);usedIds.add(b.id)}else outfit.missing.push('下装');
+    let s=pickRandom(shoes,usedIds);if(s){outfit.items.push(s);usedIds.add(s.id)}else outfit.missing.push('鞋');
+    let a=pickRandom(accs,usedIds);if(a){outfit.items.push(a);usedIds.add(a.id)}
+    outfits.push(outfit);
+  }
+  let html='';
+  outfits.forEach((o,i)=>{
+    let hasMissing=o.missing.length>0;
+    html+=`<div class="card fade-in">
+      <div class="card-head"><span class="card-num">方案 ${i+1} / 5</span><span class="card-tag">${o.style}</span></div>
+      <div class="card-grid">`;
+    let positions=['上装','下装','鞋','配饰'];
+    positions.forEach(pos=>{
+      let item=o.items.find(x=>x.category===pos||(pos==='配饰'&&['包','配饰'].includes(x.category)));
+      if(item){
+        let idle=item.wearCount===0&&daysSince(item.addedDate)>30;
+        html+=`<div class="card-item"><img src="${item.img}"><div class="lbl">${item.color||''}${item.category}${idle?'<span class="idle">待解锁</span>':''}</div></div>`;
+      }else{
+        let emoji=pos==='上装'?'👚':pos==='下装'?'👖':pos==='鞋'?'👟':'👜';
+        html+=`<div class="card-item"><div class="empty-slot">${emoji}</div><div class="lbl" style="color:#ccc">待补全</div></div>`;
+      }
+    });
+    html+=`</div><div class="card-info"><span>${currentScene}</span></div>
+      <div class="card-actions">
+        <button class="btn-heart" onclick="this.classList.toggle('liked');this.innerHTML=this.classList.contains('liked')?'❤️':'🤍'">🤍</button>
+        <button class="btn-pick" onclick="pickOutfit(this,${i})">选这套</button>
+      </div>`;
+    if(hasMissing){
+      let missingJson = JSON.stringify(o.missing).replace(/"/g, '&quot;');
+      html+=`<div class="vip-link" style="margin:0 14px 12px;padding:8px 12px;font-size:12px" onclick="openVipWithMissing(${missingJson})">
+        <span class="vip-ico">🛍️</span><span>缺${o.missing.join('/')}，去唯品会看看 →</span><span class="arrow">›</span></div>`;
+    }
+    html+=`</div>`;
+  });
+  // Inspire bar
+  let msg=INSPIRES[Math.floor(Math.random()*INSPIRES.length)];
+  html+=`<div class="inspire" onclick="refreshInspire(this)"><span class="ico">✨</span><span class="txt">${msg}</span><span class="ref">↻</span></div>`;
+  container.innerHTML=html;
+}
+
+function pickRandom(arr,used){
+  let avail=arr.filter(x=>!used.has(x.id));
+  if(avail.length===0)avail=arr;
+  if(avail.length===0)return null;
+  return avail[Math.floor(Math.random()*avail.length)];
+}
+
+function pickOutfit(btn,idx){
+  document.querySelectorAll('.btn-pick').forEach(b=>{b.classList.remove('picked');b.textContent='选这套'});
+  btn.classList.add('picked');btn.textContent='✓ 已选';
+  // Record OOTD
+  let today=new Date().toISOString().slice(0,10);
+  let existing=DB.ootds.findIndex(o=>o.date===today);
+  let outfit={date:today,outfitIdx:idx,style:currentStyle,scene:currentScene};
+  if(existing>=0)DB.ootds[existing]=outfit;else DB.ootds.push(outfit);
+  // Increment wear counts
+  let items=DB.items;
+  let container=document.getElementById('outfitCards');
+  let card=container.querySelectorAll('.card')[idx];
+  if(card){
+    card.querySelectorAll('.card-item img').forEach(img=>{
+      let src=img.src;
+      let item=items.find(x=>x.img===src);
+      if(item)item.wearCount++;
+    });
+  }
+  save();
+  toast('已记录到OOTD 📸');
+}
+
+// ============ OOTD ============
+function renderOotd(){
+  let now=new Date();let y=now.getFullYear(),m=now.getMonth();
+  document.getElementById('ootdMonth').textContent=(m+1)+'月';
+  let firstDay=new Date(y,m,1).getDay();
+  let daysInMonth=new Date(y,m+1,0).getDate();
+  let today=new Date().getDate();
+  let cal=document.getElementById('calDays');
+  let html='';
+  for(let i=0;i<firstDay;i++)html+='<div class="cd empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    let dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let has=DB.ootds.some(o=>o.date===dateStr);
+    let isToday=d===today;
+    html+=`<div class="cd${has?' has':''}${isToday?' today':''}">${d}${has?'<div class="dot"></div>':''}</div>`;
+  }
+  cal.innerHTML=html;
+  // Weekly report
+  let weekOotds=DB.ootds.filter(o=>daysSince(o.date)<=7);
+  let totalOotds=weekOotds.length;
+  let styleCounts={};weekOotds.forEach(o=>{styleCounts[o.style]=(styleCounts[o.style]||0)+1});
+  let topStyle=Object.keys(styleCounts).sort((a,b)=>styleCounts[b]-styleCounts[a])[0]||'-';
+  let utilization=DB.items.length>0?Math.round(DB.items.filter(i=>i.wearCount>0).length/DB.items.length*100):0;
+  document.getElementById('weekReport').innerHTML=`
+    <h3>📊 本周穿搭报告</h3>
+    <div class="rs"><span>本周记录</span><span class="val">${totalOotds}套</span></div>
+    <div class="rs"><span>最爱风格</span><span class="val">${topStyle}</span></div>
+    <div class="rs"><span>衣橱利用率</span><span class="val">${utilization}%</span></div>
+    <button class="btn-rpt" onclick="toast('分享卡片功能开发中 🌸')">分享我的穿搭报告 →</button>`;
+}
+
+// ============ SETTINGS ============
+function renderSettings(){
+  document.getElementById('setStyle').textContent=(DB.prefs.styles[0]||'-')+' ›';
+  document.getElementById('setItemCount').textContent=DB.items.length+'件';
+  document.getElementById('setOotdCount').textContent=DB.ootds.length+'条';
+  document.getElementById('setCity').textContent=(DB.city||'自动定位')+' ›';
+}
+function showDeleteConfirm(){document.getElementById('delConfirm').classList.add('show')}
+function hideDelConfirm(){document.getElementById('delConfirm').classList.remove('show')}
+function clearAll(){DB={items:[],ootds:[],prefs:{styles:[],colors:[],scenes:[]},city:'',initialized:true};save();hideDelConfirm();toast('已全部清空');refreshAll()}
+
+// ============ WEATHER ============
+function getWeather(){
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      DB.city='上海';// fallback
+      document.getElementById('cityName').textContent=DB.city;
+      document.getElementById('weatherTemp').textContent='27°C';
+      document.getElementById('weatherDesc').textContent='多云';
+    },()=>{
+      document.getElementById('cityName').textContent='上海';
+      document.getElementById('weatherTemp').textContent='27°C';
+      document.getElementById('weatherDesc').textContent='多云';
+    });
+  }else{
+    document.getElementById('cityName').textContent='上海';
+    document.getElementById('weatherTemp').textContent='27°C';
+    document.getElementById('weatherDesc').textContent='多云';
+  }
+}
+function changeCity(){let c=prompt('输入城市名：');if(c){DB.city=c;save();document.getElementById('cityName').textContent=c}}
+
+// ============ VIP LINK ============
+// 唯品会跳转：三层降级，永远不会出错
+// 第一层：微信小程序内 → 跳唯品会小程序（带搜索关键词）
+// 第二层：微信内H5 → 跳唯品会小程序
+// 第三层：普通浏览器 → 跳唯品会手机版
+const VIP_APPID = 'wx61276b8877f22087'; // 唯品会小程序AppID（固定）
+const VIP_H5_URL = 'https://m.vip.com';  // 唯品会手机版（固定）
+
+function openVip(keyword) {
+  // keyword 可选，如 '白色板鞋'、'驼色手提包'
+  let searchPath = keyword ? '/pages/search/index?keyword=' + encodeURIComponent(keyword) : '';
+  
+  // 第一层：微信小程序环境内，直接跳小程序
+  if (typeof wx !== 'undefined' && wx.navigateToMiniProgram) {
+    wx.navigateToMiniProgram({
+      appId: VIP_APPID,
+      path: searchPath,
+      fail: function() {
+        // 搜索路径可能不对，降级到首页
+        wx.navigateToMiniProgram({ appId: VIP_APPID, path: '' });
+      }
+    });
+    return;
+  }
+  
+  // 第二层：微信内H5，尝试通过 scheme 跳小程序
+  if (/MicroMessenger/i.test(navigator.userAgent)) {
+    let schemeUrl = 'weixin://dl/business/?appid=' + VIP_APPID;
+    if (keyword) schemeUrl += '&path=pages/search/index&query=keyword=' + encodeURIComponent(keyword);
+    window.location.href = schemeUrl;
+    // 如果 scheme 跳不了，3秒后降级到H5
+    setTimeout(function() { window.open(VIP_H5_URL, '_blank'); }, 3000);
+    return;
+  }
+  
+  // 第三层：普通浏览器，跳唯品会手机版
+  let vipUrl = VIP_H5_URL;
+  if (keyword) vipUrl = 'https://m.vip.com/server-html/index/search?query=' + encodeURIComponent(keyword);
+  window.open(vipUrl, '_blank');
+}
+
+// 衣橱补全跳转（带关键词）
+function openVipWithMissing(missingCategories) {
+  // 把缺失品类转成搜索关键词
+  let keywordMap = {
+    '上装': '女款上衣',
+    '下装': '女款裤装',
+    '外套': '女款外套',
+    '鞋': '女款单鞋',
+    '包': '女款手提包',
+    '配饰': '女款配饰'
+  };
+  let keyword = missingCategories.map(c => keywordMap[c] || c).join(' ');
+  openVip(keyword);
+}
+
+// ============ HELPERS ============
+function toast(msg){let t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+function daysSince(dateStr){return Math.floor((new Date()-new Date(dateStr))/(1000*60*60*24))}
+function refreshInspire(el){
+  let txt=el.querySelector('.txt');
+  txt.textContent=INSPIRES[Math.floor(Math.random()*INSPIRES.length)];
+}
+function refreshAll(){renderToday();renderWardrobe();renderOotd();renderSettings()}
+
+// Event listeners (more reliable than inline onclick)
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('btnStart').addEventListener('click', function() { obGo(1); });
+  document.getElementById('btnSkip').addEventListener('click', function() { skipOb(); });
+});
+</script>
+</body>
+</html>
