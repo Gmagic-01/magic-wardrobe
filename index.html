@@ -238,8 +238,8 @@ input[type="file"]{display:none}
         <div class="ob-quote">今天也是<br>好好爱自己的一天 🌸</div>
       </div>
       <div class="ob-footer">
-        <button class="btn-main" id="btnStart">开始体验</button>
-        <a class="btn-ghost" id="btnSkip">先看看</a>
+        <button class="btn-main" onclick="obGo(1);return false;">开始体验</button>
+        <a class="btn-ghost" onclick="skipOb();return false;">先看看</a>
         <div style="text-align:center;margin-top:12px;font-size:11px;color:#ccc;">完全免费 · 不收集手机号 · 随时可清空数据</div>
       </div>
     </div>
@@ -951,11 +951,7 @@ function refreshInspire(el){
 }
 function refreshAll(){renderToday();renderWardrobe();renderOotd();renderSettings()}
 
-// Event listeners (more reliable than inline onclick)
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('btnStart').addEventListener('click', function() { obGo(1); });
-  document.getElementById('btnSkip').addEventListener('click', function() { skipOb(); });
-});
+// Functions already bound inline, no need for DOMContentLoaded
 </script>
 </body>
 </html>
