@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0">
 <title>我的魔法衣橱</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -29,7 +29,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
 .tab.active .tab-label{color:var(--pink);font-weight:600}
 
 /* Onboarding */
-#onboarding{position:absolute;inset:0;background:#fff;z-index:200;overflow-y:auto}
+#onboarding{position:absolute;top:0;right:0;bottom:0;left:0;background:#fff;z-index:200;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #onboarding.hidden{display:none}
 .ob-screen{display:none;flex-direction:column;min-height:100%}
 .ob-screen.active{display:flex}
@@ -39,9 +39,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
 .ob-subtitle{font-size:14px;color:var(--text-light);line-height:1.6}
 .ob-quote{margin-top:24px;padding:16px;background:var(--pink-bg);border-radius:14px;font-size:14px;color:var(--pink);line-height:1.6}
 .ob-footer{padding:16px 32px 40px}
-.btn-main{width:100%;padding:15px;background:var(--pink);color:#fff;border:none;border-radius:25px;font-size:16px;font-weight:600;cursor:pointer}
-.btn-main:active{opacity:.85;transform:scale(.98)}
-.btn-ghost{display:block;text-align:center;margin-top:14px;color:var(--text-light);font-size:13px;cursor:pointer;text-decoration:none}
+.btn-main{display:block;width:100%;padding:15px;background:var(--pink);color:#fff;border:none;border-radius:25px;font-size:16px;font-weight:600;cursor:pointer;-webkit-appearance:none;-moz-appearance:none;appearance:none;touch-action:manipulation;pointer-events:auto;position:relative;z-index:210;text-align:center;-webkit-user-select:none;user-select:none}
+.btn-main:active{opacity:.85}
+.btn-ghost{display:block;text-align:center;margin-top:14px;color:var(--text-light);font-size:13px;cursor:pointer;text-decoration:none;touch-action:manipulation;pointer-events:auto;position:relative;z-index:210;-webkit-user-select:none;user-select:none}
 .ob-progress{display:flex;gap:6px;padding:16px 32px}
 .ob-dot{flex:1;height:3px;border-radius:2px;background:var(--border)}
 .ob-dot.done{background:var(--pink)}
@@ -133,7 +133,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
 .ward-empty .big{font-size:48px;margin-bottom:12px}
 
 /* Add panel */
-.add-panel{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:150;display:none}
+.add-panel{position:absolute;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.4);z-index:150;display:none}
 .add-panel.show{display:flex;align-items:flex-end}
 .add-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;padding:20px;padding-bottom:calc(20px + var(--safe-bottom))}
 .add-sheet h3{font-size:17px;font-weight:700;margin-bottom:16px}
@@ -145,7 +145,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC'
 input[type="file"]{display:none}
 
 /* Category picker modal */
-.cat-modal{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:160;display:none}
+.cat-modal{position:absolute;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.4);z-index:160;display:none}
 .cat-modal.show{display:flex;align-items:flex-end}
 .cat-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;padding:20px;padding-bottom:calc(20px + var(--safe-bottom));max-height:70%}
 .cat-sheet h3{font-size:17px;font-weight:700;margin-bottom:4px}
@@ -194,7 +194,7 @@ input[type="file"]{display:none}
 .tog.on::after{left:22px}
 
 /* Delete confirm */
-.del-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center}
+.del-overlay{position:absolute;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center}
 .del-overlay.show{display:flex}
 .del-box{background:#fff;border-radius:20px;padding:24px;width:280px;text-align:center}
 .del-box h3{font-size:16px;margin-bottom:8px}
@@ -205,7 +205,7 @@ input[type="file"]{display:none}
 .del-box .btn-keep{background:#f5f2ee;color:#666}
 
 /* Detail modal */
-.detail-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:150;display:none;align-items:flex-end}
+.detail-overlay{position:absolute;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.5);z-index:150;display:none;align-items:flex-end}
 .detail-overlay.show{display:flex}
 .detail-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;padding:20px;padding-bottom:calc(20px + var(--safe-bottom));max-height:75%;overflow-y:auto}
 .detail-sheet h3{font-size:17px;font-weight:700;margin-bottom:4px}
@@ -237,9 +237,9 @@ input[type="file"]{display:none}
         <p class="ob-subtitle">一个小小的AI穿搭工具<br>帮你记住每一件衣服<br>每天推荐5套搭配</p>
         <div class="ob-quote">今天也是<br>好好爱自己的一天 🌸</div>
       </div>
-      <div class="ob-footer">
-        <button class="btn-main" onclick="obGo(1);return false;">开始体验</button>
-        <a class="btn-ghost" onclick="skipOb();return false;">先看看</a>
+      <div class="ob-footer" style="position:relative;z-index:210">
+        <div class="btn-main" onclick="obGo(1)">开始体验</div>
+        <div class="btn-ghost" onclick="skipOb()">先看看</div>
         <div style="text-align:center;margin-top:12px;font-size:11px;color:#ccc;">完全免费 · 不收集手机号 · 随时可清空数据</div>
       </div>
     </div>
@@ -258,7 +258,8 @@ input[type="file"]{display:none}
         <div class="chip-row" id="sceneRow"></div>
       </div>
       <div class="ob-footer">
-        <button class="btn-main" id="btnOb1Next" disabled onclick="obGo(2)">下一步</button>
+        <div class="btn-main" id="btnOb1Next" onclick="if(!this.classList.contains('disabled'))obGo(2)">下一步</div>
+        <style>.btn-main.disabled{opacity:.4;pointer-events:none}</style>
       </div>
     </div>
 
@@ -268,13 +269,13 @@ input[type="file"]{display:none}
         <div style="font-size:56px;margin-bottom:16px">👗📸</div>
         <h3>添加你的衣服吧</h3>
         <p style="margin-bottom:24px">拍照或截图上传，各平台都可以<br>淘宝、京东、抖音、唯品会...<br>衣服鞋帽、项链耳环眼镜都可以</p>
-        <button class="btn-main" style="margin-bottom:12px" onclick="document.getElementById('camInput').click()">📷 拍照上传</button>
-        <button class="btn-main" style="background:#f5f2ee;color:var(--pink)" onclick="document.getElementById('fileInput').click()">🖼️ 从相册选</button>
+        <div class="btn-main" style="margin-bottom:12px" onclick="document.getElementById('camInput').click()">📷 拍照上传</div>
+        <div class="btn-main" style="background:#f5f2ee;color:var(--pink)" onclick="document.getElementById('fileInput').click()">🖼️ 从相册选</div>
         <div id="uploadPreview" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px"></div>
       </div>
       <div class="ob-footer">
-        <button class="btn-main" onclick="obGo(3)">进入魔法衣橱 ✨</button>
-        <a class="btn-ghost" onclick="obGo(3)">稍后再添加</a>
+        <div class="btn-main" onclick="obGo(3)">进入魔法衣橱 ✨</div>
+        <div class="btn-ghost" onclick="obGo(3)">稍后再添加</div>
       </div>
     </div>
 
@@ -289,7 +290,7 @@ input[type="file"]{display:none}
         <div class="ob-quote">今天也是<br>好好爱自己的一天 🌸</div>
       </div>
       <div class="ob-footer">
-        <button class="btn-main" onclick="finishOb()">进入魔法衣橱</button>
+        <div class="btn-main" onclick="finishOb()">进入魔法衣橱</div>
       </div>
     </div>
   </div>
@@ -545,7 +546,7 @@ function buildOnboarding(){
     sr.appendChild(d);
   });
 }
-function checkOb1(){document.getElementById('btnOb1Next').disabled=selectedStyles.size===0}
+function checkOb1(){var b=document.getElementById('btnOb1Next');if(selectedStyles.size===0)b.classList.add('disabled');else b.classList.remove('disabled')}
 
 function obGo(step){
   document.querySelectorAll('.ob-screen').forEach(s=>s.classList.remove('active'));
